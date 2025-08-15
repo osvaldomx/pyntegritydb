@@ -7,7 +7,7 @@ on:
     types: [published] # Se activa cuando publicas una nueva release en GitHub
 
 jobs:
-  build-and-publish:
+  deploy:
     name: Construir y publicar paquete en PyPI
     runs-on: ubuntu-latest
 
