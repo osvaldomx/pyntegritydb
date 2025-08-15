@@ -16,7 +16,8 @@ classifiers = [
 dependencies = [
     "SQLAlchemy==2.0.43",
     "psycopg2-binary==2.9.10",
-    "networkx==3.5"
+    "networkx==3.5",
+    "pandas==2.3.1"
 ]
 
 [project.optional-dependencies]
