@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = [
   { name = "Osvaldo Trujillo", email = "osvaldo.trujillo.ingenieria@gmail.com" },
 ]
-description = "A clean and fast Python client for football analytics data from Understat."
+description = ""
 readme = "README.md"
 requires-python = ">=3.13"
 license = { file = "LICENSE" }
@@ -16,7 +16,8 @@ classifiers = [
 dependencies = [
     "SQLAlchemy==2.0.43",
     "psycopg2-binary==2.9.10",
-    "networkx==3.5"
+    "networkx==3.5",
+    "pandas==2.3.1"
 ]
 
 [project.optional-dependencies]
