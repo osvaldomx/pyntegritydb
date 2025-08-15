@@ -14,28 +14,19 @@ requires-python = ">=3.8"
 license = { file = "LICENSE" }
 keywords = ["database", "integrity", "data quality", "sql", "validator"]
 classifiers = [
-    # Estado del proyecto
     "Development Status :: 4 - Beta",
-
-    # Audiencia y tema
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
     "Topic :: Database",
     "Topic :: Software Development :: Quality Assurance",
     "Topic :: Software Development :: Libraries :: Python Modules",
-
-    # Licencia
     "License :: OSI Approved :: MIT License",
-
-    # Versiones de Python soportadas
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    
-    # Sistema operativo
     "Operating System :: OS Independent",
 ]
 dependencies = [
@@ -44,8 +35,8 @@ dependencies = [
     "networkx>=3.0",
     "pandas>=2.0",
     "tabulate>=0.9",
-    "PyYAML==6.0.2",
-    "matplotlib==3.10.5"
+    "PyYAML>=6.0",
+    "matplotlib>=3.7"
 ]
 
 [project.optional-dependencies]
@@ -69,5 +60,4 @@ Issues = "https://github.com/osvaldomx/pyntegritydb/issues"
 pyntegritydb = "pyntegritydb.cli:main"
 
 [tool.pytest.ini_options]
-# Directorios que pytest debe ignorar durante la búsqueda de pruebas.
 norecursedirs = ["examples", "docs", "scripts"]
