@@ -1,23 +1,36 @@
 # Archivo de configuración para pyntegritydb
 
-# Umbrales por defecto que se aplicarán a todas las tablas
-# a menos que se especifique lo contrario.
+# =============================================================
+# SECCIÓN 1: UMBRALES PARA EL SISTEMA DE ALERTAS
+# Define los límites aceptables para las métricas.
+# =============================================================
 thresholds:
+  # Umbrales por defecto para todas las relaciones.
   default:
-    # La tasa de validez debe ser al menos del 99.5%
-    validity_rate: 0.995
-    
-    # La tasa de filas huérfanas no debe superar el 0.5%
-    orphan_rate: 0.005
+    validity_rate: 0.99
+    orphan_rate: 0.01
 
-  # Umbrales específicos para tablas críticas.
-  # Estos sobrescriben los valores por defecto.
+  # Umbrales específicos que sobrescriben los valores por defecto.
   tables:
     orders:
-      # La tabla 'orders' es crítica, no se aceptan errores.
+      # La tabla 'orders' es crítica y no debe tener errores.
       validity_rate: 1.0
-      orphan_rate: 0.0
-      
-    logs:
-      # En la tabla 'logs' somos más permisivos.
-      validity_rate: 0.95
+
+# =============================================================
+# SECCIÓN 2: ANÁLISIS DE CONSISTENCIA DE ATRIBUTOS
+# Define qué columnas desnormalizadas deben ser verificadas.
+# =============================================================
+consistency_checks:
+  # Para la tabla de origen 'orders':
+  orders: 
+    # Chequeo #1: Basado en la FK 'user_id'
+    - on_fk: ["user_id"]
+      attributes:
+        # Compara orders.customer_name con users.name
+        customer_name: name
+        
+    # Chequeo #2: Basado en la FK 'product_id'
+    - on_fk: ["product_id"]
+      attributes:
+        # Compara orders.product_price con products.price
+        product_price: price
