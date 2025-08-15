@@ -44,7 +44,8 @@ dependencies = [
     "networkx>=3.0",
     "pandas>=2.0",
     "tabulate>=0.9",
-    "PyYAML==6.0.2"
+    "PyYAML==6.0.2",
+    "matplotlib==3.10.5"
 ]
 
 [project.optional-dependencies]
