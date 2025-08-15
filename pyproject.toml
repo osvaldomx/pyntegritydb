@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = [
   { name = "Osvaldo Trujillo", email = "osvaldo.trujillo.ingenieria@gmail.com" },
 ]
-description = "A clean and fast Python client for football analytics data from Understat."
+description = ""
 readme = "README.md"
 requires-python = ">=3.13"
 license = { file = "LICENSE" }
