@@ -43,7 +43,8 @@ dependencies = [
     "sqlalchemy>=2.0",
     "networkx>=3.0",
     "pandas>=2.0",
-    "tabulate>=0.9"
+    "tabulate>=0.9",
+    "PyYAML==6.0.2"
 ]
 
 [project.optional-dependencies]
@@ -65,3 +66,7 @@ Issues = "https://github.com/osvaldomx/pyntegritydb/issues"
 
 [project.scripts]
 pyntegritydb = "pyntegritydb.cli:main"
+
+[tool.pytest.ini_options]
+# Directorios que pytest debe ignorar durante la búsqueda de pruebas.
+norecursedirs = ["examples", "docs", "scripts"]
