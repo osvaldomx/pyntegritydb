@@ -15,11 +15,13 @@ classifiers = [
 ]
 dependencies = [
     "SQLAlchemy==2.0.43",
+    "psycopg2-binary==2.9.10"
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0",
+    "pytest==8.4.1",
+    "mock==5.2.0",
     "ruff"
 ]
 docs = [
