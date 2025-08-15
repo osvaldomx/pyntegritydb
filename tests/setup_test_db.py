@@ -6,6 +6,10 @@ def create_test_database(db_path="test_db.sqlite"):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
+    # Eliminar tablas si ya existen para una creación limpia
+    cursor.execute("DROP TABLE IF EXISTS orders")
+    cursor.execute("DROP TABLE IF EXISTS users")
+
     # Crear tablas
     cursor.execute('''
     CREATE TABLE users (
@@ -18,6 +22,7 @@ def create_test_database(db_path="test_db.sqlite"):
         order_id INTEGER PRIMARY KEY,
         user_id INTEGER,
         product TEXT,
+        customer_name TEXT,
         FOREIGN KEY (user_id) REFERENCES users (id)
     )
     ''')
@@ -26,10 +31,14 @@ def create_test_database(db_path="test_db.sqlite"):
     cursor.execute("INSERT INTO users (id, name) VALUES (1, 'Alice'), (2, 'Bob')")
     
     # Datos válidos y una fila huérfana (user_id=99 no existe)
-    cursor.execute("INSERT INTO orders (order_id, user_id, product) VALUES (101, 1, 'Laptop')")
-    cursor.execute("INSERT INTO orders (order_id, user_id, product) VALUES (102, 2, 'Mouse')")
-    cursor.execute("INSERT INTO orders (order_id, user_id, product) VALUES (103, 1, 'Keyboard')")
-    cursor.execute("INSERT INTO orders (order_id, user_id, product) VALUES (104, 99, 'Monitor')") # Fila huérfana
+    # Fila válida y consistente
+    cursor.execute("INSERT INTO orders (order_id, user_id, product, customer_name) VALUES (101, 1, 'Laptop', 'Alice')")
+    # Fila válida y consistente
+    cursor.execute("INSERT INTO orders (order_id, user_id, product, customer_name) VALUES (102, 2, 'Mouse', 'Bob')")
+    # 👇 FILA VÁLIDA PERO INCONSISTENTE (El nombre debería ser 'Alice')
+    cursor.execute("INSERT INTO orders (order_id, user_id, product, customer_name) VALUES (103, 1, 'Keyboard', 'Alicia')")
+    # Fila huérfana (user_id=99 no existe)
+    cursor.execute("INSERT INTO orders (order_id, user_id, product, customer_name) VALUES (104, 99, 'Monitor', 'Charlie')")
 
     conn.commit()
     conn.close()

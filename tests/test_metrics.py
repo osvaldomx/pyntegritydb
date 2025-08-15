@@ -3,7 +3,11 @@ import pandas as pd
 import networkx as nx
 from unittest.mock import MagicMock, patch
 
-from pyntegritydb.metrics import _calculate_fk_completeness, analyze_database_completeness
+from pyntegritydb.metrics import (
+    _calculate_fk_completeness, 
+    analyze_database_completeness,
+    analyze_attribute_consistency
+)
 
 @pytest.fixture
 def mock_engine_connect():
@@ -64,3 +68,58 @@ def test_analyze_database_completeness_flow():
         assert len(df_results) == 1 # Debe haber una fila por cada relación en el grafo
         assert df_results.iloc[0]['referencing_table'] == 'orders'
         assert df_results.iloc[0]['validity_rate'] == 0.95
+
+
+@patch('pyntegritydb.metrics._calculate_single_consistency')
+def test_analyze_attribute_consistency_flow(mock_calculator):
+    """
+    Prueba el flujo de la función de análisis de consistencia.
+    Verifica que itere la configuración y llame al calculador correctamente.
+    """
+    # 1. Configuración de Mocks
+    mock_engine = MagicMock()
+    
+    # Grafo de esquema simulado
+    mock_graph = nx.DiGraph()
+    mock_graph.add_edge(
+        "orders", "users",
+        constrained_columns=["user_id"], referred_columns=["id"]
+    )
+    
+    # Configuración de chequeo simulada
+    mock_config = {
+        "consistency_checks": {
+            "orders": [
+                {
+                    "on_fk": ["user_id"],
+                    "attributes": {
+                        "customer_name": "name"
+                    }
+                }
+            ]
+        }
+    }
+    
+    # Resultado simulado del calculador
+    mock_calculator.return_value = {
+        'total_valid_rows': 100,
+        'inconsistent_rows': 10,
+        'consistency_rate': 0.90
+    }
+
+    # 2. Ejecución
+    df_results = analyze_attribute_consistency(mock_engine, mock_graph, mock_config)
+
+    # 3. Verificaciones
+    mock_calculator.assert_called_once() # Verificar que se llamó al calculador
+    
+    assert isinstance(df_results, pd.DataFrame)
+    assert len(df_results) == 1
+    
+    result_row = df_results.iloc[0]
+    assert result_row['referencing_table'] == 'orders'
+    assert result_row['referencing_attribute'] == 'customer_name'
+    assert result_row['referenced_attribute'] == 'name'
+    assert result_row['consistency_rate'] == 0.90
+
+
