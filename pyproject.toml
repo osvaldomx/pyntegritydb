@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Una biblioteca para medir la calidad de la integridad referencial en bases de datos relacionales."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 license = { file = "LICENSE" }
 keywords = ["database", "integrity", "data quality", "sql", "validator"]
 classifiers = [
