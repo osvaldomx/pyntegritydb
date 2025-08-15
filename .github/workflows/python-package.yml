@@ -10,9 +10,6 @@ jobs:
   build-and-publish:
     name: Construir y publicar paquete en PyPI
     runs-on: ubuntu-latest
-    permissions:
-      # MUY IMPORTANTE: Este permiso es necesario para la publicación sin contraseña/token
-      id-token: write
 
     steps:
       - name: Clonar el repositorio
@@ -37,4 +34,5 @@ jobs:
 
       - name: Publicar paquete en PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        # No se necesita usuario ni contraseña, usa Trusted Publishing
+        with:
+            password: ${{ secrets.PYPI_API_TOKEN }}
