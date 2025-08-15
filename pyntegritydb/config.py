@@ -23,8 +23,8 @@ def load_config(path: str) -> dict:
             config = yaml.safe_load(f)
             
             # Validación básica de la estructura del archivo
-            if not isinstance(config, dict) or 'thresholds' not in config:
-                raise ValueError("La clave 'thresholds' es requerida en el archivo de configuración.")
+            if not isinstance(config, dict):
+                raise ValueError("El archivo de configuración debe ser un diccionario YAML válido.")
             
             print(f"✅ Configuración cargada exitosamente desde '{path}'")
             return config

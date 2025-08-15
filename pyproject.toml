@@ -43,6 +43,7 @@ dependencies = [
 dev = [
     "pytest==8.4.1",
     "mock==5.2.0",
+    "PyYAML>=6.0",
     "ruff"
 ]
 docs = [
