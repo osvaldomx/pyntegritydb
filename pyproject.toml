@@ -1,24 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "pyntegritydb"
 version = "0.1.0"
 authors = [
   { name = "Osvaldo Trujillo", email = "osvaldo.trujillo.ingenieria@gmail.com" },
 ]
-description = ""
+description = "Una biblioteca para medir la calidad de la integridad referencial en bases de datos relacionales."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.8"
 license = { file = "LICENSE" }
+keywords = ["database", "integrity", "data quality", "sql", "validator"]
 classifiers = [
-    "Programming Language :: Python :: 3",
+    # Estado del proyecto
+    "Development Status :: 4 - Beta",
+
+    # Audiencia y tema
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Topic :: Database",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+
+    # Licencia
     "License :: OSI Approved :: MIT License",
+
+    # Versiones de Python soportadas
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    
+    # Sistema operativo
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "SQLAlchemy==2.0.43",
     "psycopg2-binary==2.9.10",
-    "networkx==3.5",
-    "pandas==2.3.1",
-    "tabulate==0.9.0"
+    "sqlalchemy>=2.0",
+    "networkx>=3.0",
+    "pandas>=2.0",
+    "tabulate>=0.9"
 ]
 
 [project.optional-dependencies]
@@ -37,3 +62,6 @@ Homepage = "https://github.com/osvaldomx/pyntegritydb"
 Repository = "https://github.com/osvaldomx/pyntegritydb"
 Changelog = "https://github.com/osvaldomx/pyntegritydb/releases/tag/v0.2.0"
 Issues = "https://github.com/osvaldomx/pyntegritydb/issues"
+
+[project.scripts]
+pyntegritydb = "pyntegritydb.cli:main"
