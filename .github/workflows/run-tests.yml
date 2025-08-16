@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12"]
+        python-version: ["3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12"]
+        python-version: ["3.12", "3.13"]
     
     services:
       postgres:
@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12"]
+        python-version: ["3.12", "3.13"]
 
     services:
       mysql:
@@ -78,8 +78,6 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: testpassword
           MYSQL_DATABASE: testdb
-          MYSQL_USER: testuser
-          MYSQL_PASSWORD: testpassword
         ports:
           - 3306:3306
         options: >-
@@ -100,4 +98,4 @@ jobs:
       - name: Ejecutar pruebas con MySQL
         run: pytest tests/test_integration.py
         env:
-          DB_URI: "mysql+pymysql://testuser:testpassword@localhost:3306/testdb"
+          DB_URI: "mysql+pymysql://root:testpassword@localhost:3306/testdb"

@@ -16,6 +16,8 @@ IMAGE_OUTPUT_PATH = "test_output_graph.png"
 DB_URI_DEFAULT = f"sqlite:///{DB_PATH}"
 DB_URI_FROM_ENV = os.getenv("DB_URI")
 
+DB_URI_TO_USE = DB_URI_FROM_ENV if DB_URI_FROM_ENV else DB_URI_DEFAULT
+
 @pytest.fixture(scope="module")
 def test_environment():
     """
@@ -23,7 +25,7 @@ def test_environment():
     y los elimina al finalizar.
     """
     # 1. Crear la base de datos de prueba
-    create_test_database(DB_PATH)
+    create_test_database(DB_URI_TO_USE)
     
     # 2. Crear el archivo de configuración de prueba
     config_data = {
