@@ -9,6 +9,7 @@ from .setup_test_db import create_test_database
 
 DB_PATH = "test_integration_db.sqlite"
 CONFIG_PATH = "test_integration_config.yml"
+IMAGE_OUTPUT_PATH = "test_output_graph.png"
 
 @pytest.fixture(scope="module")
 def test_db_and_config():
@@ -40,10 +41,9 @@ def test_db_and_config():
     yield # Aquí es donde se ejecutan las pruebas
     
     # 3. Limpieza posterior
-    if os.path.exists(DB_PATH):
-        os.remove(DB_PATH)
-    if os.path.exists(CONFIG_PATH):
-        os.remove(CONFIG_PATH)
+    for path in [DB_PATH, CONFIG_PATH, IMAGE_OUTPUT_PATH]:
+        if os.path.exists(path):
+            os.remove(path)
 
 def test_cli_full_integration_with_alerts(test_db_and_config):
     """
@@ -58,7 +58,9 @@ def test_cli_full_integration_with_alerts(test_db_and_config):
             sys.executable, "-m", "pyntegritydb.cli", 
             db_uri, 
             "--config", CONFIG_PATH,
-            "--format", "cli"
+            "--format", "cli",
+            "--visualize",
+            "--output-image", IMAGE_OUTPUT_PATH
         ],
         capture_output=True,
         text=True
@@ -68,16 +70,20 @@ def test_cli_full_integration_with_alerts(test_db_and_config):
     assert result.returncode == 1, "El programa debería salir con código 1 si hay alertas"
     
     output = result.stdout
+
+    # 2. Verificar que se intentó generar el gráfico y que el archivo fue creado
+    assert "🎨 Generando visualización del grafo" in output
+    assert os.path.exists(IMAGE_OUTPUT_PATH)
     
-    # 2. Verificar la sección de Alertas
+    # 3. Verificar la sección de Alertas
     assert "🚦 Reporte de Alertas 🚦" in output
     assert "ALERTA [Completitud]: La tabla 'orders' viola el umbral de 'validity_rate'" in output
     assert "ALERTA [Consistencia]: El atributo 'orders.customer_name' viola el umbral de 'consistency_rate'" in output
     
-    # 3. Verificar el reporte de Completitud
+    # 4. Verificar el reporte de Completitud
     assert "Reporte de Completitud (Filas Huérfanas)" in output
     assert "75.00%" in output  # 3 de 4 filas válidas
     
-    # 4. Verificar el reporte de Consistencia
+    # 5. Verificar el reporte de Consistencia
     assert "Reporte de Consistencia de Atributos" in output
     assert "66.67%" in output # 2 de 3 filas consistentes
