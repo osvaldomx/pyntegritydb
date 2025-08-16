@@ -1,32 +1,27 @@
 -- DUMP PARA POSTGRESQL
-
--- Crear el esquema
 DROP TABLE IF EXISTS "orders";
 DROP TABLE IF EXISTS "users";
 
 CREATE TABLE "users" (
     "id" INTEGER PRIMARY KEY,
-    "name" TEXT NOT NULL
+    "name" VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE "orders" (
     "order_id" INTEGER PRIMARY KEY,
     "user_id" INTEGER,
-    "product" TEXT,
-    "customer_name" TEXT,
+    "product" VARCHAR(255),
+    "customer_name" VARCHAR(255),
     FOREIGN KEY ("user_id") REFERENCES "users" ("id")
 );
 
--- Desactivar temporalmente las restricciones para insertar datos erróneos
 ALTER TABLE "orders" DISABLE TRIGGER ALL;
 
--- Insertar datos
 INSERT INTO "users" ("id", "name") VALUES (1, 'Alice'), (2, 'Bob');
 INSERT INTO "orders" ("order_id", "user_id", "product", "customer_name") VALUES 
 (101, 1, 'Laptop', 'Alice'),
 (102, 2, 'Mouse', 'Bob'),
-(103, 1, 'Keyboard', 'Alicia'), -- Fila inconsistente
-(104, 99, 'Monitor', 'Charlie'); -- Fila huérfana
+(103, 1, 'Keyboard', 'Alicia'),
+(104, 99, 'Monitor', 'Charlie');
 
--- Reactivar las restricciones
 ALTER TABLE "orders" ENABLE TRIGGER ALL;
