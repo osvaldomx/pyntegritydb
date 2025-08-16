@@ -1,4 +1,7 @@
--- DUMP PARA POSTGRESQL
+-- Conéctate a la base de datos correcta primero
+\c testdb;
+
+-- Ahora, ejecuta los comandos de esquema y datos
 DROP TABLE IF EXISTS "orders";
 DROP TABLE IF EXISTS "users";
 
