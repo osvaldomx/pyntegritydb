@@ -1,5 +1,6 @@
+import sys
 import argparse
-from . import connect, schema, metrics, report, config
+from . import connect, schema, metrics, report, config, alerts
 import pandas as pd
 
 def main():
@@ -54,15 +55,29 @@ def main():
         # 4. Si hay configuración, calcular métricas de consistencia
         if config_data:
             consistency_df = metrics.analyze_attribute_consistency(engine, schema_graph, config_data)
+
+        # 5. Alertas
+        alert_messages = []
+        if config_data:
+            alert_messages = alerts.check_thresholds(
+                completeness_df,
+                consistency_df,
+                config_data
+            )
         
-        # 5. Generar y mostrar el reporte
+        # 6. Generar y mostrar el reporte
         print("\n📊 Reporte de Integridad Referencial:")
         final_report = report.generate_report(
             completeness_df=completeness_df,
             consistency_df=consistency_df,
+            alerts=alert_messages,
             report_format=args.format
         )
         print(final_report)
+
+        if alert_messages:
+            print("\n❌ Se encontraron violaciones a los umbrales de calidad.")
+            sys.exit(1)
 
     except (ValueError, ConnectionError) as e:
         print(f"\n❌ Error: {e}")
