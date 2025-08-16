@@ -96,7 +96,7 @@ jobs:
       - name: Instalar dependencias
         run: |
           pip install -e ".[dev]"
-          pip install PyMySQL
+          pip install PyMySQL cryptography
       - name: Ejecutar pruebas con MySQL
         run: pytest tests/test_integration.py
         env:
