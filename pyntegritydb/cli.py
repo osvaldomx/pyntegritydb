@@ -38,6 +38,11 @@ def main():
         default="db_integrity_graph.png",
         help="Ruta para guardar la imagen del grafo (usado con --visualize)."
     )
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        help="Ruta para guardar el reporte en un archivo en lugar de mostrarlo en la consola."
+    )
     
     args = parser.parse_args()
     config_data = None
@@ -94,8 +99,21 @@ def main():
             alerts=alert_messages,
             report_format=args.format
         )
-        print(final_report)
 
+        # 8. Guardar o imprimir el reporte
+        if args.output_file:
+            try:
+                with open(args.output_file, 'w') as f:
+                    f.write(final_report)
+                print(f"✅ Reporte guardado exitosamente en: {args.output_file}")
+            except IOError as e:
+                print(f"❌ Error al escribir en el archivo '{args.output_file}': {e}")
+                sys.exit(1)
+        else:
+            print("\n📊 Reporte de Calidad de Datos:")
+            print(final_report)
+    
+        # 9. Aviso de alertas de calidad
         if alert_messages:
             print("\n❌ Se encontraron violaciones a los umbrales de calidad.")
             sys.exit(1)

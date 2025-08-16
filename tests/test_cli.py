@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 import pandas as pd
 import networkx as nx
 
@@ -162,13 +162,23 @@ def test_main_cli_exits_with_error_on_alerts(
 ):
     """Prueba que la CLI sale con código 1 si se encuentran alertas."""
     # Configurar mocks para un flujo completo
-    mock_parse_args.return_value = MagicMock(config="config.yml")
+    mock_parse_args.return_value = MagicMock(
+        db_uri="sqlite:///test.db",
+        format="cli",
+        config="config.yml",
+        visualize=False,       
+        output_image=None,     
+        output_file=None       
+    )
     mock_config.load_config.return_value = {"thresholds": {}}
     mock_metrics.analyze_database_completeness.return_value = pd.DataFrame()
     mock_metrics.analyze_attribute_consistency.return_value = pd.DataFrame()
     
     # Simular que se encontraron alertas
     mock_alerts.check_thresholds.return_value = ["ALERTA: Algo salió mal"]
+
+    # Simula un grafo con al menos una relación
+    mock_schema.get_schema_graph.return_value = nx.DiGraph([("a", "b")])
 
     # Ejecutar la función principal
     main()
@@ -218,4 +228,44 @@ def test_main_cli_with_visualize_flag(
         metrics_df=mock_df,
         output_path="test_graph.png"
     )
+
+
+@patch('builtins.open', new_callable=mock_open)
+@patch('pyntegritydb.cli.report')
+@patch('pyntegritydb.cli.metrics')
+@patch('pyntegritydb.cli.schema')
+@patch('pyntegritydb.cli.connect')
+@patch('pyntegritydb.cli.config')
+@patch('pyntegritydb.cli.alerts')
+@patch('argparse.ArgumentParser.parse_args')
+def test_main_cli_writes_to_output_file(
+    mock_parse_args, mock_alerts, mock_config, mock_connect,
+    mock_schema, mock_metrics, mock_report, mock_open_file
+):
+    """Prueba que el reporte se escriba en un archivo con --output-file."""
+    # Simular argumentos
+    mock_parse_args.return_value = MagicMock(
+        db_uri="sqlite:///test.db",
+        format="json",
+        config=None,
+        visualize=False,
+        output_image=None,
+        output_file="report.json"
+    )
+
+    # Simula un grafo CON relaciones para que el programa no termine antes.
+    mock_graph = nx.DiGraph([("table_a", "table_b")])
+    mock_schema.get_schema_graph.return_value = mock_graph
+    
+    # Simular un flujo simple
+    # mock_schema.get_schema_graph.return_value = nx.DiGraph()
+    mock_report.generate_report.return_value = "{'report': 'test'}"
+
+    main()
+
+    # Verificar que se intentó abrir el archivo correcto en modo escritura
+    mock_open_file.assert_called_once_with("report.json", "w")
+    # Verificar que se escribió el contenido del reporte en el archivo
+    mock_open_file().write.assert_called_once_with("{'report': 'test'}")
+
 
