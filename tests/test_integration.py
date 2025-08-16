@@ -34,24 +34,21 @@ def test_db():
     ]
     
     with engine.connect() as connection:
-        if dialect == 'mysql':
-            connection.execute(text('SET FOREIGN_KEY_CHECKS=0;'))
-        elif dialect == 'postgresql':
-            connection.execute(text('SET session_replication_role = replica'))
-        
-        with connection.begin():
+        with connection.begin(): # <-- Inicia una única transacción
+            if dialect == 'mysql':
+                connection.execute(text('SET FOREIGN_KEY_CHECKS=0;'))
+            elif dialect == 'postgresql':
+                connection.execute(text('SET session_replication_role = replica'))
+            
             for stmt in data_statements:
                 connection.execute(text(stmt))
-
-        if dialect == 'mysql':
-            connection.execute(text('SET FOREIGN_KEY_CHECKS=1;'))
-        elif dialect == 'postgresql':
-            connection.execute(text('SET session_replication_role = DEFAULT'))
             
-    yield db_uri  # Pasa la URI a la prueba
+    yield db_uri 
     
+    # Limpieza posterior
     if "sqlite" in db_uri and os.path.exists(DB_PATH):
         os.remove(DB_PATH)
+
 
 def test_cli_full_integration(test_db):
     """
