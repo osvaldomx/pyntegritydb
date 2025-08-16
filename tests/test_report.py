@@ -23,26 +23,39 @@ def sample_metrics_df():
 
 def test_generate_report_cli_format(sample_metrics_df):
     """Prueba que el formato CLI se genere y contenga los datos clave."""
-    report = generate_report(sample_metrics_df, 'cli')
+    report = generate_report(
+        completeness_df=sample_metrics_df,
+        alerts=[],
+        report_format='cli'
+    )
     assert isinstance(report, str)
     assert 'Tasa de Validez' in report
-    assert '95.00%' in report  # Verifica que el formato de porcentaje se aplicó
+    assert '95.00%' in report
     assert 'orders' in report
-    assert 'Resumen del Análisis' in report
+    assert 'Resumen de Completitud' in report
+    assert "🚦 Reporte de Alertas 🚦" not in report
 
 def test_generate_report_json_format(sample_metrics_df):
     """Prueba que el formato JSON sea válido y contenga los datos correctos."""
-    report = generate_report(sample_metrics_df, 'json')
+    report = generate_report(
+        completeness_df=sample_metrics_df,
+        alerts=[],
+        report_format='json'
+    )
     data = json.loads(report)
     
-    assert isinstance(data, list)
-    assert len(data) == 2
-    assert data[0]['referencing_table'] == 'orders'
-    assert data[0]['validity_rate'] == 0.95
+    assert isinstance(data, dict)
+    assert 'completeness_analysis' in data
+    assert 'consistency_analysis' in data
+    assert data['completeness_analysis'][0]['validity_rate'] == 0.95
 
 def test_generate_report_csv_format(sample_metrics_df):
     """Prueba que el formato CSV se genere con el encabezado y datos correctos."""
-    report = generate_report(sample_metrics_df, 'csv')
+    report = generate_report(
+        completeness_df=sample_metrics_df,
+        alerts=[],
+        report_format='csv'
+    )
     
     assert isinstance(report, str)
     lines = report.strip().split('\n')
@@ -53,4 +66,42 @@ def test_generate_report_csv_format(sample_metrics_df):
 def test_generate_report_unsupported_format(sample_metrics_df):
     """Prueba que se lance un ValueError para un formato no soportado."""
     with pytest.raises(ValueError, match="Formato de reporte no soportado: 'xml'"):
-        generate_report(sample_metrics_df, 'xml')
+        generate_report(
+            completeness_df=sample_metrics_df, 
+            report_format='xml'
+        )
+
+
+def test_generate_report_with_alerts_cli(sample_metrics_df):
+    """Prueba que la sección de alertas se muestre en el reporte CLI."""
+    alerts = ["ALERTA: La tabla 'orders' tiene una validez de 95.00%"]
+    
+    report = generate_report(
+        completeness_df=sample_metrics_df,
+        alerts=alerts,
+        report_format='cli'
+    )
+    
+    assert "🚦 Reporte de Alertas 🚦" in report
+    assert "ALERTA: La tabla 'orders'" in report
+
+def test_generate_report_with_alerts_json(sample_metrics_df):
+    """Prueba que las alertas se incluyan en el reporte JSON."""
+    alerts = ["ALERTA: Test"]
+    
+    report = generate_report(
+        completeness_df=sample_metrics_df,
+        alerts=alerts,
+        report_format='json'
+    )
+    data = json.loads(report)
+    
+    assert "alerts" in data
+    assert data["alerts"] == alerts
+
+
+
+
+
+
+

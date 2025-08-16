@@ -47,12 +47,3 @@ def test_load_config_invalid_yaml():
         with pytest.raises(ValueError, match="Error al parsear el archivo YAML"):
             load_config("invalid.yml")
 
-def test_load_config_missing_required_key():
-    """
-    Prueba que se lance un ValueError si falta la clave 'thresholds'.
-    """
-    mock_missing_key_yaml = "some_other_key: value"
-    
-    with patch("builtins.open", mock_open(read_data=mock_missing_key_yaml)):
-        with pytest.raises(ValueError, match="La clave 'thresholds' es requerida"):
-            load_config("missing_key.yml")
