@@ -78,10 +78,16 @@ def test_main_cli_handles_connection_error(mock_parse_args, mock_create_engine):
 @patch('pyntegritydb.cli.metrics')
 @patch('pyntegritydb.cli.schema')
 @patch('pyntegritydb.cli.connect')
-@patch('pyntegritydb.cli.config') # Simular el módulo config
+@patch('pyntegritydb.cli.config')
+@patch('pyntegritydb.cli.alerts')
 @patch('argparse.ArgumentParser.parse_args')
 def test_main_cli_flow_with_config(
-    mock_parse_args, mock_config, mock_connect, mock_schema, mock_metrics, mock_report
+    mock_parse_args,
+    mock_alerts,
+    mock_config, 
+    mock_connect, mock_schema, 
+    mock_metrics, 
+    mock_report
 ):
     """
     Prueba el flujo completo de la CLI cuando se proporciona un archivo de configuración.
@@ -90,14 +96,27 @@ def test_main_cli_flow_with_config(
     # Simular argumentos, incluyendo --config
     mock_parse_args.return_value = MagicMock(
         db_uri="sqlite:///test.db", 
-        format="cli", 
+        format="cli",
+        alerts="[]",
         config="config.yml"
     )
     
     # Simular datos de retorno
     mock_config.load_config.return_value = {"thresholds": {}, "consistency_checks": {}}
-    mock_metrics.analyze_database_completeness.return_value = pd.DataFrame({'a': [1]})
-    mock_metrics.analyze_attribute_consistency.return_value = pd.DataFrame({'b': [2]})
+    mock_alerts.check_thresholds.return_value = []
+
+    mock_completeness_df = pd.DataFrame({
+        'referencing_table': ['orders'],
+        'validity_rate': [0.99]
+    })
+    mock_consistency_df = pd.DataFrame({
+        'referencing_table': ['orders'],
+        'referencing_attribute': ['customer_name'],
+        'consistency_rate': [0.95]
+    })
+    mock_metrics.analyze_database_completeness.return_value = mock_completeness_df
+    mock_metrics.analyze_attribute_consistency.return_value = mock_consistency_df
+    
 
     # 2. Ejecución
     main()
@@ -109,6 +128,9 @@ def test_main_cli_flow_with_config(
     # Verificar que se llamaron AMBOS análisis
     mock_metrics.analyze_database_completeness.assert_called_once()
     mock_metrics.analyze_attribute_consistency.assert_called_once()
+
+    # Verificar que el módulo de alertas fue llamado correctamente
+    mock_alerts.check_thresholds.assert_called_once()
     
     # Verificar que el reporte se genera con ambos DataFrames
     mock_report.generate_report.assert_called_once()
@@ -117,3 +139,33 @@ def test_main_cli_flow_with_config(
     assert 'consistency_df' in kwargs
     assert not kwargs['completeness_df'].empty
     assert not kwargs['consistency_df'].empty
+
+
+@patch('pyntegritydb.cli.report')
+@patch('pyntegritydb.cli.metrics')
+@patch('pyntegritydb.cli.schema')
+@patch('pyntegritydb.cli.connect')
+@patch('pyntegritydb.cli.config')
+@patch('pyntegritydb.cli.alerts')
+@patch('argparse.ArgumentParser.parse_args')
+@patch('pyntegritydb.cli.sys.exit')
+def test_main_cli_exits_with_error_on_alerts(
+    mock_exit, mock_parse_args, mock_alerts, mock_config, mock_connect, mock_schema, mock_metrics, mock_report
+):
+    """Prueba que la CLI sale con código 1 si se encuentran alertas."""
+    # Configurar mocks para un flujo completo
+    mock_parse_args.return_value = MagicMock(config="config.yml")
+    mock_config.load_config.return_value = {"thresholds": {}}
+    mock_metrics.analyze_database_completeness.return_value = pd.DataFrame()
+    mock_metrics.analyze_attribute_consistency.return_value = pd.DataFrame()
+    
+    # Simular que se encontraron alertas
+    mock_alerts.check_thresholds.return_value = ["ALERTA: Algo salió mal"]
+
+    # Ejecutar la función principal
+    main()
+
+    # Verificar que se llamó a sys.exit con el código de error 1
+    mock_alerts.check_thresholds.assert_called_once()
+    mock_exit.assert_called_once_with(1)
+
