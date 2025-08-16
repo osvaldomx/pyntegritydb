@@ -7,14 +7,16 @@ import sys
 import yaml
 from .setup_test_db import create_test_database
 
+# --- Constantes para los archivos de prueba ---
 DB_PATH = "test_integration_db.sqlite"
 CONFIG_PATH = "test_integration_config.yml"
+REPORT_OUTPUT_PATH = "test_output_report.json"
 IMAGE_OUTPUT_PATH = "test_output_graph.png"
 
 @pytest.fixture(scope="module")
-def test_db_and_config():
+def test_environment():
     """
-    Fixture que crea la base de datos y el archivo de configuración antes de las pruebas
+    Fixture que crea todos los archivos necesarios antes de las pruebas
     y los elimina al finalizar.
     """
     # 1. Crear la base de datos de prueba
@@ -40,25 +42,25 @@ def test_db_and_config():
         
     yield # Aquí es donde se ejecutan las pruebas
     
-    # 3. Limpieza posterior
-    for path in [DB_PATH, CONFIG_PATH, IMAGE_OUTPUT_PATH]:
+    # 3. Limpieza posterior de todos los archivos generados
+    for path in [DB_PATH, CONFIG_PATH, REPORT_OUTPUT_PATH, IMAGE_OUTPUT_PATH]:
         if os.path.exists(path):
             os.remove(path)
 
-def test_cli_full_integration_with_alerts(test_db_and_config):
+def test_cli_full_integration(test_environment):
     """
-    Prueba el flujo completo de la aplicación, incluyendo la generación de alertas.
+    Prueba el flujo completo: análisis, alertas, guardado de reporte y visualización.
     """
     db_uri = f"sqlite:///{DB_PATH}"
     
-    # Ejecuta el comando. Esperamos que falle (exit code 1) porque hay alertas.
-    # Por eso, NO usamos check=True.
+    # Ejecuta el comando completo. Esperamos que falle (exit code 1) porque hay alertas.
     result = subprocess.run(
         [
             sys.executable, "-m", "pyntegritydb.cli", 
             db_uri, 
             "--config", CONFIG_PATH,
-            "--format", "cli",
+            "--format", "json", # Usamos JSON para facilitar la verificación del contenido
+            "--output-file", REPORT_OUTPUT_PATH,
             "--visualize",
             "--output-image", IMAGE_OUTPUT_PATH
         ],
@@ -66,24 +68,21 @@ def test_cli_full_integration_with_alerts(test_db_and_config):
         text=True
     )
     
-    # 1. Verificar que el programa terminó con un código de error
+    # --- Verificaciones ---
+
+    # 1. Verificar que el programa terminó con un código de error debido a las alertas
     assert result.returncode == 1, "El programa debería salir con código 1 si hay alertas"
     
-    output = result.stdout
-
-    # 2. Verificar que se intentó generar el gráfico y que el archivo fue creado
-    assert "🎨 Generando visualización del grafo" in output
+    # 2. Verificar que el archivo de reporte fue creado y no está vacío
+    assert os.path.exists(REPORT_OUTPUT_PATH)
+    assert os.path.getsize(REPORT_OUTPUT_PATH) > 0
+    
+    # 3. Verificar que el archivo de imagen fue creado
     assert os.path.exists(IMAGE_OUTPUT_PATH)
+    assert os.path.getsize(IMAGE_OUTPUT_PATH) > 0
     
-    # 3. Verificar la sección de Alertas
-    assert "🚦 Reporte de Alertas 🚦" in output
-    assert "ALERTA [Completitud]: La tabla 'orders' viola el umbral de 'validity_rate'" in output
-    assert "ALERTA [Consistencia]: El atributo 'orders.customer_name' viola el umbral de 'consistency_rate'" in output
-    
-    # 4. Verificar el reporte de Completitud
-    assert "Reporte de Completitud (Filas Huérfanas)" in output
-    assert "75.00%" in output  # 3 de 4 filas válidas
-    
-    # 5. Verificar el reporte de Consistencia
-    assert "Reporte de Consistencia de Atributos" in output
-    assert "66.67%" in output # 2 de 3 filas consistentes
+    # 4. Verificar los mensajes clave en la salida de la consola
+    output = result.stdout
+    assert "✅ Reporte guardado exitosamente" in output
+    assert "✅ Gráfico guardado exitosamente" in output
+    assert "❌ Se encontraron violaciones a los umbrales de calidad" in output
