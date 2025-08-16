@@ -13,6 +13,9 @@ CONFIG_PATH = "test_integration_config.yml"
 REPORT_OUTPUT_PATH = "test_output_report.json"
 IMAGE_OUTPUT_PATH = "test_output_graph.png"
 
+DB_URI_DEFAULT = f"sqlite:///{DB_PATH}"
+DB_URI_FROM_ENV = os.getenv("DB_URI")
+
 @pytest.fixture(scope="module")
 def test_environment():
     """
@@ -51,7 +54,7 @@ def test_cli_full_integration(test_environment):
     """
     Prueba el flujo completo: análisis, alertas, guardado de reporte y visualización.
     """
-    db_uri = f"sqlite:///{DB_PATH}"
+    db_uri = DB_URI_FROM_ENV if DB_URI_FROM_ENV else DB_URI_DEFAULT
     
     # Ejecuta el comando completo. Esperamos que falle (exit code 1) porque hay alertas.
     result = subprocess.run(
