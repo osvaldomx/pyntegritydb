@@ -44,6 +44,8 @@ jobs:
           POSTGRES_DB: testdb
         ports:
           - 5432:5432
+        volumes:
+          - ./tests/db_dumps/postgres_init.sql:/docker-entrypoint-initdb.d/init.sql
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -80,6 +82,8 @@ jobs:
           MYSQL_DATABASE: testdb
         ports:
           - 3306:3306
+        volumes:
+          - ./tests/db_dumps/mysql_init.sql:/docker-entrypoint-initdb.d/init.sql
         options: >-
           --health-cmd "mysqladmin ping -h 127.0.0.1"
           --health-interval 10s
