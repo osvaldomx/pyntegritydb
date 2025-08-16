@@ -71,7 +71,6 @@ def test_generate_report_unsupported_format(sample_metrics_df):
             report_format='xml'
         )
 
-
 def test_generate_report_with_alerts_cli(sample_metrics_df):
     """Prueba que la sección de alertas se muestre en el reporte CLI."""
     alerts = ["ALERTA: La tabla 'orders' tiene una validez de 95.00%"]
@@ -99,7 +98,33 @@ def test_generate_report_with_alerts_json(sample_metrics_df):
     assert "alerts" in data
     assert data["alerts"] == alerts
 
+def test_generate_report_with_consistency_cli(sample_metrics_df):
+    """
+    Prueba que el reporte CLI muestre la sección de consistencia
+    cuando se le pasan datos de consistencia.
+    """
+    # 1. Crear un DataFrame de consistencia de ejemplo
+    consistency_data = {
+        'referencing_table': ['orders'],
+        'referencing_attribute': ['customer_name'],
+        'referenced_attribute': ['name'],
+        'consistency_rate': [0.95],
+        'inconsistent_rows': [5]
+    }
+    consistency_df = pd.DataFrame(consistency_data)
 
+    # 2. Llamar a generate_report con ambos DataFrames
+    report = generate_report(
+        completeness_df=sample_metrics_df,
+        consistency_df=consistency_df, # <-- Pasamos los datos aquí
+        report_format='cli'
+    )
+
+    # 3. Verificar que la salida contiene la tabla de consistencia
+    assert "Reporte de Consistencia de Atributos" in report
+    assert "Tasa de Consistencia" in report
+    assert "95.00%" in report
+    assert "orders.customer_name" not in report # Asegura que no se formatee incorrectamente
 
 
 
