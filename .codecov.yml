@@ -16,6 +16,6 @@ coverage:
 # Ignora estos directorios al calcular el porcentaje de cobertura total.
 # Esto hace que la métrica sea más significativa.
 ignore:
-  - "tests/"
+  - "scripts/"
   - "examples/"
   - "docs/"
