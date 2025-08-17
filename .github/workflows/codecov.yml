@@ -32,3 +32,5 @@ jobs:
         with:
           token: ${{ secrets.CODECOVE_TOKEN }}
           verbose: true
+          slug: ${{ github.repository }}
+          override_branch: ${{ github.ref_name }}
