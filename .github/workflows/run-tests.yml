@@ -59,6 +59,12 @@ jobs:
         run: |
           pip install -e ".[dev]"
           pip install psycopg2-binary
+      - name: Inicializar la base de datos PostgreSQL
+        run: |
+          sleep 1
+          docker exec ${{ job.services.postgres.id }} psql -U postgres -d postgres -f /tmp/init.sql
+        env:
+          PGPASSWORD: testpassword
       - name: Ejecutar pruebas con PostgreSQL
         run: pytest tests/test_integration.py
         env:
