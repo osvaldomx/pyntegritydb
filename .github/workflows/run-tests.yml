@@ -89,8 +89,6 @@ jobs:
           MYSQL_DATABASE: testdb
         ports:
           - 3306:3306
-        volumes:
-          - ${{ github.workspace }}/tests/db_dumps/mysql_init.sql:/tmp/init.sql
         options: >-
           --health-cmd "mysqladmin ping -h 127.0.0.1"
           --health-interval 10s
@@ -109,6 +107,11 @@ jobs:
         run: |
           pip install -e ".[dev]"
           pip install PyMySQL cryptography
+      - name: Inicializar la base de datos MySQL
+        run: |
+          sleep 15
+          cat ./tests/db_dumps/mysql_init.sql | docker exec -i ${{ job.services.mysql.id }} mysql -u root --password=testpassword testdb
+
       - name: Ejecutar pruebas con MySQL
         run: pytest tests/test_integration.py
         env:
