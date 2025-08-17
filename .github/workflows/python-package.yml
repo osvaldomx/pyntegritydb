@@ -28,7 +28,7 @@ jobs:
       - name: Ejecutar pruebas
         run: |
           pip install pytest pytest-cov
-          pytest
+          pytest --cov=src/pyntegritydb --cov-report=xml
 
       - name: Subir paquete a Codecov
         uses: codecove/codecove-action@v4
