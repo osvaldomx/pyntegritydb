@@ -1,6 +1,3 @@
--- Conéctate a la base de datos correcta primero
-\c testdb;
-
 -- Ahora, ejecuta los comandos de esquema y datos
 DROP TABLE IF EXISTS "orders";
 DROP TABLE IF EXISTS "users";
@@ -18,7 +15,8 @@ CREATE TABLE "orders" (
     FOREIGN KEY ("user_id") REFERENCES "users" ("id")
 );
 
-ALTER TABLE "orders" DISABLE TRIGGER ALL;
+-- Desactivar temporalmente las restricciones de FK para la sesión actual
+SET session_replication_role = 'replica';
 
 INSERT INTO "users" ("id", "name") VALUES (1, 'Alice'), (2, 'Bob');
 INSERT INTO "orders" ("order_id", "user_id", "product", "customer_name") VALUES 
@@ -27,4 +25,5 @@ INSERT INTO "orders" ("order_id", "user_id", "product", "customer_name") VALUES
 (103, 1, 'Keyboard', 'Alicia'),
 (104, 99, 'Monitor', 'Charlie');
 
-ALTER TABLE "orders" ENABLE TRIGGER ALL;
+-- Desactivar temporalmente las restricciones de FK para la sesión actual
+SET session_replication_role = 'replica';

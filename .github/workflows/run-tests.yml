@@ -2,7 +2,7 @@ name: Pruebas de BD
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, feat/workflow ]
   pull_request:
     branches: [ main ]
 
@@ -37,15 +37,13 @@ jobs:
     
     services:
       postgres:
-        image: postgres:15
+        image: postgres:17.5
         env:
-          POSTGRES_USER: testuser
           POSTGRES_PASSWORD: testpassword
-          POSTGRES_DB: testdb
         ports:
           - 5432:5432
         volumes:
-          - ./tests/db_dumps/postgres_init.sql:/docker-entrypoint-initdb.d/init.sql
+          - ${{ github.workspace }}/tests/db_dumps/postgres_init.sql:/tmp/init.sql
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -53,6 +51,9 @@ jobs:
           --health-retries 5
           
     steps:
+      - name: Limpiar espacio de trabajo previo
+        run: |
+          sudo rm -rf $GITHUB_WORKSPACE && mkdir $GITHUB_WORKSPACE
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -61,10 +62,16 @@ jobs:
         run: |
           pip install -e ".[dev]"
           pip install psycopg2-binary
+      - name: Inicializar la base de datos PostgreSQL
+        env:
+          PGPASSWORD: testpassword
+        run: |
+          sleep 5
+          cat ./tests/db_dumps/postgres_init.sql | docker exec -i ${{ job.services.postgres.id }} psql -U postgres -d postgres
       - name: Ejecutar pruebas con PostgreSQL
         run: pytest tests/test_integration.py
         env:
-          DB_URI: "postgresql://testuser:testpassword@localhost:5432/testdb"
+          DB_URI: "postgresql://postgres:testpassword@localhost:5432/postgres"
 
   # --- TRABAJO PARA MYSQL ---
   test-mysql:
@@ -82,8 +89,6 @@ jobs:
           MYSQL_DATABASE: testdb
         ports:
           - 3306:3306
-        volumes:
-          - ./tests/db_dumps/mysql_init.sql:/docker-entrypoint-initdb.d/init.sql
         options: >-
           --health-cmd "mysqladmin ping -h 127.0.0.1"
           --health-interval 10s
@@ -91,6 +96,9 @@ jobs:
           --health-retries 5
           
     steps:
+      - name: Limpiar espacio de trabajo previo
+        run: |
+          sudo rm -rf $GITHUB_WORKSPACE && mkdir $GITHUB_WORKSPACE
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -99,6 +107,11 @@ jobs:
         run: |
           pip install -e ".[dev]"
           pip install PyMySQL cryptography
+      - name: Inicializar la base de datos MySQL
+        run: |
+          sleep 15
+          cat ./tests/db_dumps/mysql_init.sql | docker exec -i ${{ job.services.mysql.id }} mysql -u root --password=testpassword testdb
+
       - name: Ejecutar pruebas con MySQL
         run: pytest tests/test_integration.py
         env:
