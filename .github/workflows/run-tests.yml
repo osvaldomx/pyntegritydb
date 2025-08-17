@@ -43,7 +43,7 @@ jobs:
         ports:
           - 5432:5432
         volumes:
-          - ${{ github.workspace }}/tests/db_dumps/postgres:/tmp
+          - "${{ github.workspace }}/tests/db_dumps/postgres:/tmp"
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
