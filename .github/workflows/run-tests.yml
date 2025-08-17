@@ -39,9 +39,7 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: testuser
           POSTGRES_PASSWORD: testpassword
-          POSTGRES_DB: testdb
         ports:
           - 5432:5432
         volumes:
@@ -64,7 +62,7 @@ jobs:
       - name: Ejecutar pruebas con PostgreSQL
         run: pytest tests/test_integration.py
         env:
-          DB_URI: "postgresql://testuser:testpassword@localhost:5432/testdb"
+          DB_URI: "postgresql://postgres:testpassword@localhost:5432/postgres"
 
   # --- TRABAJO PARA MYSQL ---
   test-mysql:
