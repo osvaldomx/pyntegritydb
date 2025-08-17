@@ -43,7 +43,7 @@ jobs:
         ports:
           - 5432:5432
         volumes:
-          - ${{ github.workspace }}/tests/db_dumps/postgres_init.sql:/tmp/init.sql
+          - ${{ github.workspace }}/tests/db_dumps:/tmp/init.sql
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
