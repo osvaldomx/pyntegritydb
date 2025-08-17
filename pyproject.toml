@@ -56,6 +56,6 @@ Issues = "https://github.com/osvaldomx/pyntegritydb/issues"
 [project.scripts]
 pyntegritydb = "pyntegritydb.cli:main"
 
-[tool.pytest.ini_options]
-norecursedirs = ["examples", "docs", "scripts"]
-addopts = "--cov=pyntegritydb --cov-report=term-missing"
+# [tool.pytest.ini_options]
+# norecursedirs = ["examples", "docs", "scripts"]
+# addopts = "--cov=pyntegritydb --cov-report=term-missing"
