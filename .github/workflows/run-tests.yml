@@ -43,7 +43,7 @@ jobs:
         ports:
           - 5432:5432
         volumes:
-          - tests/db_dumps/postgres_init.sql:/docker-entrypoint-initdb.d/init.sql
+          - /tests/db_dumps/postgres_init.sql:/docker-entrypoint-initdb.d/init.sql
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
