@@ -2,7 +2,7 @@ name: Pruebas de BD
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, feat/workflow ]
   pull_request:
     branches: [ main ]
 
@@ -44,7 +44,7 @@ jobs:
           - 5432:5432
         volumes:
           # - ${{ github.workspace }}/tests/db_dumps/postgres:/tmp
-          - ./tests/db_dumps/postgres:/tmp
+          - ./tests/db_dumps/postgres/init.sql:/tmp/init.sql
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
