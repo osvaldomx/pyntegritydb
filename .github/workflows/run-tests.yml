@@ -44,7 +44,7 @@ jobs:
           - 5432:5432
         volumes:
           # - ${{ github.workspace }}/tests/db_dumps/postgres:/tmp
-          - ./tests/db_dumps/postgres:/docker-entrypoint-initdb.d
+          - "./tests/db_dumps/postgres:/docker-entrypoint-initdb.d"
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
