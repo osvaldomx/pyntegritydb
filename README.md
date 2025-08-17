@@ -5,7 +5,7 @@
 [![Documentation Status](https://readthedocs.org/projects/pyntegritydb/badge/?version=latest)](https://pyntegritydb.readthedocs.io/es/latest/)
 [![Python versions](https://img.shields.io/pypi/pyversions/pyntegritydb)](https://pypi.org/project/pyntegritydb/)
 [![Build Status](https://github.com/osvaldomx/pyntegritydb/actions/workflows/python-package.yml/badge.svg)](https://github.com/osvaldomx/pyntegritydb/actions)
-[![Coverage Status](https://coveralls.io/repos/github/osvaldomx/pyntegritydb/badge.svg?branch=main)](https://coveralls.io/github/osvaldomx/pyntegritydb?branch=main)
+[![codecov](https://codecov.io/github/osvaldomx/pyntegritydb/graph/badge.svg?token=6VABJQKLEF)](https://codecov.io/github/osvaldomx/pyntegritydb)
 
 
 **pyntegritydb** es una herramienta de línea de comandos para analizar y medir la calidad de la integridad referencial en bases de datos relacionales. Basada en el paper académico ["Referential Integrity Quality Metrics"](https://www2.cs.uh.edu/~ordonez/pdfwww/w-2008-DSS-refint.pdf), la biblioteca te ayuda a diagnosticar rápidamente relaciones rotas o "huérfanas" en tu esquema.
