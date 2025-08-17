@@ -5,6 +5,19 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), y este proyecto se adhiere al [Versionamiento Semántico](https://semver.org/spec/v2.0.0.html).
 
 ---
+## [0.3.0] - 2025-08-17
+
+### Added
+- **Mejoras de Usabilidad en la CLI**:
+    - Se añadió el flag `--visualize` para generar un mapa visual de la salud del esquema.
+    - Se implementó la opción `--output-file` para guardar los reportes directamente en un archivo.
+- **Documentación Profesional**: Se ha configurado Sphinx y el proyecto ahora se publica automáticamente en Read the Docs.
+
+### Changed
+- **Calidad del Código**: Se integró la medición de cobertura de código con `pytest-cov`, alcanzando un 92% de cobertura en las pruebas.
+- **Pruebas**: Se han actualizado las pruebas unitarias y de integración para cubrir las nuevas funcionalidades de la CLI.
+
+---
 ## [0.2.0] - 2025-08-15
 
 ### Added

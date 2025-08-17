@@ -1,6 +1,6 @@
 import sys
 import argparse
-from . import connect, schema, metrics, report, config, alerts
+from . import connect, schema, metrics, report, config, alerts, visualize
 import pandas as pd
 
 def main():
@@ -26,6 +26,22 @@ def main():
         "--config",
         type=str,
         help="Ruta al archivo de configuración (config.yml) para análisis avanzados como la consistencia de atributos."
+    )
+    parser.add_argument(
+        "--visualize",
+        action="store_true", # Es un flag, no necesita valor
+        help="Genera una imagen del grafo de relaciones de la base de datos."
+    )
+    parser.add_argument(
+        "--output-image",
+        type=str,
+        default="db_integrity_graph.png",
+        help="Ruta para guardar la imagen del grafo (usado con --visualize)."
+    )
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        help="Ruta para guardar el reporte en un archivo en lugar de mostrarlo en la consola."
     )
     
     args = parser.parse_args()
@@ -54,7 +70,8 @@ def main():
 
         # 4. Si hay configuración, calcular métricas de consistencia
         if config_data:
-            consistency_df = metrics.analyze_attribute_consistency(engine, schema_graph, config_data)
+            consistency_df = metrics.analyze_attribute_consistency(
+                engine, schema_graph, config_data)
 
         # 5. Alertas
         alert_messages = []
@@ -64,8 +81,17 @@ def main():
                 consistency_df,
                 config_data
             )
+
+        # 6. Visualización
+        if args.visualize:
+            print(f"\n🎨 Generando visualización del grafo en: {args.output_image}")
+            visualize.visualize_schema_graph(
+                graph=schema_graph,
+                metrics_df=completeness_df, # Basamos los colores en la completitud
+                output_path=args.output_image
+            )
         
-        # 6. Generar y mostrar el reporte
+        # 7. Generar y mostrar el reporte
         print("\n📊 Reporte de Integridad Referencial:")
         final_report = report.generate_report(
             completeness_df=completeness_df,
@@ -73,8 +99,21 @@ def main():
             alerts=alert_messages,
             report_format=args.format
         )
-        print(final_report)
 
+        # 8. Guardar o imprimir el reporte
+        if args.output_file:
+            try:
+                with open(args.output_file, 'w') as f:
+                    f.write(final_report)
+                print(f"✅ Reporte guardado exitosamente en: {args.output_file}")
+            except IOError as e:
+                print(f"❌ Error al escribir en el archivo '{args.output_file}': {e}")
+                sys.exit(1)
+        else:
+            print("\n📊 Reporte de Calidad de Datos:")
+            print(final_report)
+    
+        # 9. Aviso de alertas de calidad
         if alert_messages:
             print("\n❌ Se encontraron violaciones a los umbrales de calidad.")
             sys.exit(1)

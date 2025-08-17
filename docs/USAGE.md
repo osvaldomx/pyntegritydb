@@ -1,6 +1,6 @@
 # Guía de Uso Detallada de pyntegritydb
 
-Bienvenido al manual de usuario de `pyntegritydb`. Aquí encontrarás explicaciones detalladas sobre cada una de las funcionalidades de la herramienta, desde el uso avanzado de la línea de comandos hasta la creación de un archivo de configuración completo.
+Bienvenido al manual de usuario de `pyntegritydb`. Aquí encontrarás explicaciones detalladas sobre cada una de las funcionalidades de la herramienta.
 
 ---
 ## 1. Uso de la Línea de Comandos (CLI)
@@ -14,40 +14,36 @@ pyntegritydb <db_uri> [opciones]
 ### Argumentos Principales
 
 * **`db_uri`** (Obligatorio): La [URI de conexión de SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls) para tu base de datos.
-    * **SQLite**: `"sqlite:///ruta/a/tu/database.db"`
-    * **PostgreSQL**: `"postgresql://usuario:contraseña@host:puerto/nombre_db"`
-    * **MySQL**: `"mysql+pymysql://usuario:contraseña@host:puerto/nombre_db"`
 
-* **`--format <formato>`** (Opcional): Especifica el formato de salida del reporte. El valor por defecto es `cli`.
-    * `cli`: Una tabla formateada para la consola.
-    * `json`: Salida en formato JSON, ideal para APIs.
-    * `csv`: Salida en formato de valores separados por comas.
+* **`--format <formato>`** (Opcional): Especifica el formato de salida del reporte.
+    * Opciones: `cli`, `json`, `csv`.
+    * Default: `cli`.
 
-* **`--config <ruta>`** (Opcional): Ruta al archivo de configuración `config.yml`. Activa funcionalidades avanzadas como el análisis de consistencia y el sistema de alertas.
+* **`--config <ruta>`** (Opcional): Ruta al archivo `config.yml`. Activa el análisis de consistencia y el sistema de alertas.
+
+* **`--output-file <ruta>`** (Opcional): Guarda la salida del reporte en el archivo especificado. Si no se usa, el reporte se muestra en la consola.
+
+* **`--visualize`** (Opcional): Es un flag que activa la generación de una imagen del grafo de relaciones.
+
+* **`--output-image <ruta>`** (Opcional): Especifica la ruta y el nombre del archivo para la imagen generada.
+    * Default: `db_integrity_graph.png`.
 
 ---
 ## 2. Archivo de Configuración (`config.yml`)
 
 El archivo `config.yml` es el centro de control para las funcionalidades avanzadas. Puede contener dos secciones principales: `thresholds` y `consistency_checks`.
 
-
-
 ### `thresholds`: Sistema de Alertas
 
-Esta sección te permite definir los umbrales de calidad para tus datos. Si una métrica no cumple con el umbral, se generará una alerta.
+Esta sección te permite definir los umbrales de calidad para tus datos.
 
 ```yaml
 thresholds:
-  # Umbrales por defecto que se aplicarán a todas las tablas.
   default:
-    validity_rate: 0.99    # Tasa de validez de completitud
-    consistency_rate: 0.98 # Tasa de validez de consistencia
-
-  # Umbrales específicos para tablas críticas.
-  # Estos sobrescriben los valores por defecto.
+    validity_rate: 0.99
+    consistency_rate: 0.98
   tables:
     orders:
-      # La tabla 'orders' debe tener una integridad perfecta.
       validity_rate: 1.0
 ```
 
@@ -57,42 +53,17 @@ Esta sección define qué atributos desnormalizados deben ser verificados.
 
 ```yaml
 consistency_checks:
-  # La clave principal es la tabla de origen (la que tiene la FK).
   orders: 
-    # Cada elemento de la lista es una prueba de consistencia
-    # basada en una FK específica de esa tabla.
     - on_fk: ["user_id"]
-      # Atributos a comparar: {columna_en_orders: columna_en_users}
       attributes:
         customer_name: name
-        
-    - on_fk: ["product_id"]
-      attributes:
-        product_price: price
 ```
 
 ---
 ## 3. Interpretación de los Reportes
 
-El reporte de la CLI está dividido en hasta tres secciones.
+El reporte de la CLI está dividido en hasta tres secciones: Alertas, Completitud y Consistencia.
 
-### Sección de Alertas
-Aparece solo si se usa un archivo de configuración y se viola un umbral.
-
-```
-🚦 Reporte de Alertas 🚦
-=========================
-- ALERTA [Completitud]: La tabla 'orders' viola el umbral de 'validity_rate'. Esperado >= 100.00%, Obtenido = 98.50%
-```
-
-### Reporte de Completitud
-Mide las referencias rotas o "huérfanas".
-
-* **Tasa de Validez**: Porcentaje de filas con una clave foránea válida. **Un 100% es ideal.**
-* **Filas Huérfanas**: Conteo de filas con una clave foránea inválida. **Un 0 es ideal.**
-
-### Reporte de Consistencia de Atributos
-Aparece solo si se configura. Mide si los datos desnormalizados son correctos.
-
-* **Tasa de Consistencia**: De las filas con FK válida, qué porcentaje tiene los atributos consistentes. **Un 100% es ideal.**
-* **Filas Inconsistentes**: Conteo de filas con datos desnormalizados incorrectos. **Un 0 es ideal.**
+* **Alertas**: Aparece solo si se usa un `config.yml` y se viola un umbral.
+* **Completitud**: Mide las referencias rotas o "huérfanas" (`validity_rate`).
+* **Consistencia**: Mide si los datos desnormalizados son correctos (`consistency_rate`).

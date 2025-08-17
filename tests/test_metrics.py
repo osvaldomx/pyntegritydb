@@ -69,7 +69,6 @@ def test_analyze_database_completeness_flow():
         assert df_results.iloc[0]['referencing_table'] == 'orders'
         assert df_results.iloc[0]['validity_rate'] == 0.95
 
-
 @patch('pyntegritydb.metrics._calculate_single_consistency')
 def test_analyze_attribute_consistency_flow(mock_calculator):
     """
@@ -122,4 +121,30 @@ def test_analyze_attribute_consistency_flow(mock_calculator):
     assert result_row['referenced_attribute'] == 'name'
     assert result_row['consistency_rate'] == 0.90
 
-
+def test_calculate_fk_completeness_on_empty_table():
+    """
+    Prueba la lógica de cálculo cuando la tabla de origen está vacía.
+    """
+    # 1. Simular una conexión y un resultado de consulta para una tabla vacía
+    mock_result = MagicMock()
+    mock_result.mappings.return_value.first.return_value = {
+        'total_rows': 0,
+        'orphan_rows': 0,
+        'null_rows': 0
+    }
+    
+    mock_connection = MagicMock()
+    mock_connection.__enter__.return_value.execute.return_value = mock_result
+    
+    mock_engine = MagicMock()
+    mock_engine.connect.return_value = mock_connection
+    
+    # 2. Llamar a la función
+    metrics = _calculate_fk_completeness(
+        mock_engine, "empty_table", ["user_id"], "users", ["id"]
+    )
+    
+    # 3. Verificar que los resultados son los esperados para el caso vacío
+    assert metrics['total_rows'] == 0
+    assert metrics['orphan_rows_count'] == 0
+    assert metrics['validity_rate'] == 1.0 # Clave: se evita la división por cero

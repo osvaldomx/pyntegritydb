@@ -39,6 +39,7 @@ dev = [
     "pytest==8.4.1",
     "mock==5.2.0",
     "PyYAML>=6.0",
+    "pytest-cov",
     "ruff"
 ]
 docs = [
@@ -57,3 +58,4 @@ pyntegritydb = "pyntegritydb.cli:main"
 
 [tool.pytest.ini_options]
 norecursedirs = ["examples", "docs", "scripts"]
+addopts = "--cov=pyntegritydb --cov-report=term-missing"
