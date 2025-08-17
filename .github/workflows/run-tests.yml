@@ -1,4 +1,4 @@
-name: Ejecutar Pruebas
+name: Pruebas de BD
 
 on:
   push:
