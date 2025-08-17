@@ -1,0 +1,21 @@
+# codecov.yml
+
+# Configura cómo Codecov reporta el estado en los Pull Requests de GitHub
+coverage:
+  status:
+    project:
+      default:
+        # Falla el chequeo si la cobertura total del proyecto cae por debajo del 90%
+        target: 90%
+    patch:
+      default:
+        # Falla el chequeo si el nuevo código introducido en el PR
+        # no tiene al menos un 95% de cobertura.
+        target: 95%
+
+# Ignora estos directorios al calcular el porcentaje de cobertura total.
+# Esto hace que la métrica sea más significativa.
+ignore:
+  - "tests/"
+  - "examples/"
+  - "docs/"
