@@ -44,7 +44,7 @@ jobs:
           - 5432:5432
         volumes:
           # - ${{ github.workspace }}/tests/db_dumps/postgres:/tmp
-          - "./tests/db_dumps/postgres:/docker-entrypoint-initdb.d"
+          - "./tests/db_dumps/postgres:/tmp"
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -63,6 +63,12 @@ jobs:
         run: |
           pip install -e ".[dev]"
           pip install psycopg2-binary
+      - name: Inicializar la base de datos PostgreSQL
+        env:
+          PGPASSWORD: testpassword
+        run: |
+          sleep 5
+          docker exec ${{ job.services.postgres.id }} psql -U postgres -d postgres -f /tmp/init.sql
       - name: Ejecutar pruebas con PostgreSQL
         run: pytest tests/test_integration.py
         env:
