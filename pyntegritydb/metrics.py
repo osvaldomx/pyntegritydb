@@ -3,6 +3,11 @@ import networkx as nx
 from sqlalchemy.engine import Engine
 from sqlalchemy import text
 
+def _get_quoted_name(name: str, dialect: str) -> str:
+    """Devuelve el nombre del identificador con las comillas correctas para el dialecto."""
+    if dialect == 'mysql':
+        return f'`{name}`'
+    return f'"{name}"'
 
 def _calculate_fk_completeness(
     engine: Engine, 
@@ -11,23 +16,15 @@ def _calculate_fk_completeness(
     referenced_table: str, 
     referenced_columns: list
 ) -> dict:
-    """
-    Función auxiliar que calcula las métricas para una única relación FK.
+    dialect = engine.dialect.name
+    q = lambda name: _get_quoted_name(name, dialect)
     
-    Ejecuta una única consulta SQL optimizada con LEFT JOIN para obtener
-    los conteos necesarios y luego calcula las tasas y densidades.
-    """
-    # Construcción robusta de la consulta para manejar claves simples y compuestas
     join_condition = " AND ".join(
-        f't1."{ref_col}" = t2."{pk_col}"'
+        f"t1.{q(ref_col)} = t2.{q(pk_col)}"
         for ref_col, pk_col in zip(referencing_columns, referenced_columns)
     )
-    
-    # Una fila es huérfana si, tras el join, la PK de la tabla referenciada es NULL
-    orphan_condition = " OR ".join(f't2."{pk_col}" IS NULL' for pk_col in referenced_columns)
-    
-    # Una FK es nula si cualquiera de sus columnas en la tabla de origen es NULL
-    null_fk_condition = " OR ".join(f't1."{ref_col}" IS NULL' for ref_col in referencing_columns)
+    orphan_condition = " OR ".join(f"t2.{q(pk_col)} IS NULL" for pk_col in referenced_columns)
+    null_fk_condition = " OR ".join(f"t1.{q(ref_col)} IS NULL" for ref_col in referencing_columns)
 
     query = text(f"""
     SELECT
@@ -35,9 +32,9 @@ def _calculate_fk_completeness(
         COUNT(CASE WHEN {orphan_condition} THEN 1 END) AS orphan_rows,
         COUNT(CASE WHEN {null_fk_condition} THEN 1 END) AS null_rows
     FROM
-        "{referencing_table}" AS t1
+        {q(referencing_table)} AS t1
     LEFT JOIN
-        "{referenced_table}" AS t2 ON {join_condition}
+        {q(referenced_table)} AS t2 ON {join_condition}
     """)
     
     try:
@@ -45,62 +42,46 @@ def _calculate_fk_completeness(
             result = connection.execute(query).mappings().first()
     except Exception as e:
         print(f"❌ Error al ejecutar la consulta para {referencing_table} -> {referenced_table}: {e}")
-        return {
-            'error': str(e)
-        }
+        return {'error': str(e)}
 
     total_rows = result.get('total_rows', 0)
     orphan_rows = result.get('orphan_rows', 0)
     null_rows = result.get('null_rows', 0)
     
-    # Evitar división por cero si la tabla está vacía
     if total_rows == 0:
-        return {
-            'total_rows': 0,
-            'orphan_rows_count': 0,
-            'valid_rows_count': 0,
-            'null_rows_count': 0,
-            'orphan_rate': 0.0,
-            'validity_rate': 1.0,
-            'fk_density': 1.0,
-        }
+        return {'total_rows': 0, 'orphan_rows_count': 0, 'valid_rows_count': 0, 'null_rows_count': 0, 'orphan_rate': 0.0, 'validity_rate': 1.0, 'fk_density': 1.0}
         
     valid_rows = total_rows - orphan_rows
     
-    return {
-        'total_rows': total_rows,
-        'orphan_rows_count': orphan_rows,
-        'valid_rows_count': valid_rows,
-        'null_rows_count': null_rows,
-        'orphan_rate': orphan_rows / total_rows,
-        'validity_rate': valid_rows / total_rows,
-        'fk_density': (total_rows - null_rows) / total_rows,
-    }
-
+    return {'total_rows': total_rows, 'orphan_rows_count': orphan_rows, 'valid_rows_count': valid_rows, 'null_rows_count': null_rows, 'orphan_rate': orphan_rows / total_rows, 'validity_rate': valid_rows / total_rows, 'fk_density': (total_rows - null_rows) / total_rows}
 
 def _calculate_single_consistency(engine: Engine, check_details: dict) -> dict:
-    """Calcula la consistencia para un par de atributos específico."""
+    dialect = engine.dialect.name
+    q = lambda name: _get_quoted_name(name, dialect)
+    
     ref_table = check_details['referencing_table']
     pk_table = check_details['referenced_table']
     ref_attr = check_details['referencing_attribute']
     pk_attr = check_details['referenced_attribute']
-    join_condition = check_details['join_condition']
+    join_columns = check_details['join_columns']
 
-    # Esta consulta solo opera sobre filas donde la FK es válida (INNER JOIN)
-    # y compara los valores de los atributos especificados.
+    formatted_join = " AND ".join(
+        f"t1.{q(orig)} = t2.{q(dest)}" for orig, dest in join_columns
+    )
+
     query = text(f"""
     SELECT
         COUNT(*) AS total_valid_rows,
         COUNT(CASE 
-            WHEN (t1."{ref_attr}" != t2."{pk_attr}") OR 
-                 (t1."{ref_attr}" IS NULL AND t2."{pk_attr}" IS NOT NULL) OR
-                 (t1."{ref_attr}" IS NOT NULL AND t2."{pk_attr}" IS NULL)
+            WHEN (t1.{q(ref_attr)} != t2.{q(pk_attr)}) OR 
+                 (t1.{q(ref_attr)} IS NULL AND t2.{q(pk_attr)} IS NOT NULL) OR
+                 (t1.{q(ref_attr)} IS NOT NULL AND t2.{q(pk_attr)} IS NULL)
             THEN 1 
             END) AS inconsistent_rows
     FROM
-        "{ref_table}" AS t1
+        {q(ref_table)} AS t1
     INNER JOIN
-        "{pk_table}" AS t2 ON {join_condition}
+        {q(pk_table)} AS t2 ON {formatted_join}
     """)
     
     with engine.connect() as connection:
@@ -112,33 +93,19 @@ def _calculate_single_consistency(engine: Engine, check_details: dict) -> dict:
     if total_rows == 0:
         return {'total_valid_rows': 0, 'inconsistent_rows': 0, 'consistency_rate': 1.0}
 
-    return {
-        'total_valid_rows': total_rows,
-        'inconsistent_rows': inconsistent,
-        'consistency_rate': (total_rows - inconsistent) / total_rows
-    }
+    return {'total_valid_rows': total_rows, 'inconsistent_rows': inconsistent, 'consistency_rate': (total_rows - inconsistent) / total_rows}
 
-
-def analyze_attribute_consistency(
-        engine: Engine, 
-        schema_graph: nx.DiGraph, 
-        config: dict) -> pd.DataFrame:
-    """
-    Analiza la consistencia de atributos basado en la configuración proporcionada.
-    """
+def analyze_attribute_consistency(engine: Engine, schema_graph: nx.DiGraph, config: dict) -> pd.DataFrame:
     if "consistency_checks" not in config:
         return pd.DataFrame()
 
     results = []
     checks = config["consistency_checks"]
-
     print("\n🔬 Analizando consistencia de atributos...")
 
     for ref_table, check_list in checks.items():
         for check_item in check_list:
             fk_origin_cols = check_item['on_fk']
-            
-            # Encontrar la relación en el grafo para obtener la tabla y columnas de destino
             target_edge = None
             for u, v, data in schema_graph.edges(data=True):
                 if u == ref_table and data['constrained_columns'] == fk_origin_cols:
@@ -152,10 +119,6 @@ def analyze_attribute_consistency(
             pk_table = target_edge[1]
             fk_dest_cols = target_edge[2]['referred_columns']
 
-            join_condition = " AND ".join(
-                f't1."{orig}" = t2."{dest}"' for orig, dest in zip(fk_origin_cols, fk_dest_cols)
-            )
-
             for ref_attr, pk_attr in check_item['attributes'].items():
                 print(f"  -> Verificando: {ref_table}.{ref_attr} vs {pk_table}.{pk_attr}")
                 check_details = {
@@ -163,15 +126,13 @@ def analyze_attribute_consistency(
                     'referenced_table': pk_table,
                     'referencing_attribute': ref_attr,
                     'referenced_attribute': pk_attr,
-                    'join_condition': join_condition
+                    'join_columns': list(zip(fk_origin_cols, fk_dest_cols))
                 }
-                
                 metrics = _calculate_single_consistency(engine, check_details)
                 results.append({**check_details, **metrics})
 
     print("✅ Análisis de consistencia completado.")
     return pd.DataFrame(results)
-
 
 def analyze_database_completeness(
         engine: Engine, 
