@@ -1,0 +1,19 @@
+# .readthedocs.yaml
+# Configuración para que Read the Docs construya la documentación
+
+version: 2
+
+# Establece la versión de Python que usará
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.11"
+
+# Le dice a Sphinx dónde encontrar la configuración
+sphinx:
+  configuration: docs/source/conf.py
+
+# Instala las dependencias necesarias para construir la documentación
+python:
+  install:
+    - requirements: docs/requirements.txt
