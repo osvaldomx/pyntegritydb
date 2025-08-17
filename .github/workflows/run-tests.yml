@@ -43,7 +43,7 @@ jobs:
         ports:
           - 5432:5432
         volumes:
-          - ./tests/db_dumps/postgres_init.sql:/tmp/init.sql
+          - ${{ github.workspace }}/tests/db_dumps/postgres_init.sql:/tmp/init.sql
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -55,8 +55,6 @@ jobs:
         run: |
           sudo rm -rf $GITHUB_WORKSPACE && mkdir $GITHUB_WORKSPACE
       - uses: actions/checkout@v4
-      - name: Depurar sistema de archivos
-        run: ls -R
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -64,14 +62,12 @@ jobs:
         run: |
           pip install -e ".[dev]"
           pip install psycopg2-binary
-      - name: Verificar archivo
-        run: ls -lh /tmp
       - name: Inicializar la base de datos PostgreSQL
         env:
           PGPASSWORD: testpassword
         run: |
           sleep 5
-          docker exec ${{ job.services.postgres.id }} psql -U postgres -d postgres -f /tmp/init.sql
+          cat ./tests/db_dumps/postgres_init.sql | docker exec -i ${{ job.services.postgres.id }} psql -U postgres -d postgres
       - name: Ejecutar pruebas con PostgreSQL
         run: pytest tests/test_integration.py
         env:
